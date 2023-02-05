@@ -9,6 +9,8 @@ with pkgs; mkShell rec {
     udev alsaLib vulkan-loader
     xorg.libXcursor xorg.libXrandr xorg.libXi # To use x11 feature
     libxkbcommon wayland # To use wayland feature
+
+    cargo-watch
   ];
   LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath buildInputs;
 }
