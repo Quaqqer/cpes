@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-#[derive(Component)]
+#[derive(Component,  Debug)]
 struct Person {
 
 }
@@ -11,7 +11,9 @@ fn init(mut commands: Commands) {
 
 
 fn print_persons(query: Query<&Person>) {
-    println!("{:?}", query);
+    for person in query.iter() {
+        println!("{:?}", person);
+    }
 }
 
 
