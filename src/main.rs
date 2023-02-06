@@ -48,25 +48,32 @@ fn main() {
         .run();
 }
 
-fn move_player(mut query: Query<&mut ExternalImpulse, With<Player>>, keys: Res<Input<KeyCode>>) {
-    let mut impulse = query.single_mut();
+fn move_player(
+    mut query: Query<(&mut ExternalImpulse, &Transform), With<Player>>,
+    keys: Res<Input<KeyCode>>,
+) {
+    let (mut impulse, transform) = query.single_mut();
 
-    let mut new_impulse = Vec2::new(0., 0.);
+    let mut new_impulse = Vec3::new(0., 0., 0.);
+    let mut new_torque_impulse: f32 = 0.;
 
     if keys.pressed(KeyCode::W) {
-        new_impulse.y += 10000.0;
-    }
-    if keys.pressed(KeyCode::A) {
-        new_impulse.x -= 10000.0;
+        new_impulse.y += 1000.0;
     }
     if keys.pressed(KeyCode::S) {
-        new_impulse.y -= 10000.0;
-    }
-    if keys.pressed(KeyCode::D) {
-        new_impulse.x += 10000.0;
+        new_impulse.y -= 1000.0;
     }
 
-    impulse.impulse = new_impulse;
+    if keys.pressed(KeyCode::A) {
+        new_torque_impulse += 10000.0;
+    }
+    if keys.pressed(KeyCode::D) {
+        new_torque_impulse -= 10000.0;
+    }
+
+    let rotated_impulse = transform.rotation.mul_vec3(new_impulse);
+    impulse.impulse = Vec2::new(rotated_impulse.x, rotated_impulse.y);
+    impulse.torque_impulse = new_torque_impulse;
 }
 
 fn move_camera(
@@ -103,7 +110,7 @@ struct Player;
 struct ShipComponent {
     spec: ShipComponentSpec,
     sprite: SpriteBundle,
-    body: (RigidBody, Collider, ExternalImpulse, GravityScale),
+    body: (RigidBody, Collider, ExternalImpulse, GravityScale, Damping),
 }
 
 impl ShipComponent {
@@ -116,12 +123,16 @@ impl ShipComponent {
             },
             body: (
                 RigidBody::Dynamic,
-                Collider::cuboid(20., 20.),
+                Collider::cuboid(16., 16.),
                 ExternalImpulse {
                     impulse: Vec2::new(0., 0.),
                     torque_impulse: 0.,
                 },
                 GravityScale(0.0),
+                Damping {
+                    linear_damping: 0.3,
+                    angular_damping: 0.2,
+                },
             ),
         }
     }
